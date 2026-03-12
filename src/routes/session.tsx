@@ -14,7 +14,7 @@ export default function SessionPage() {
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, loading: authLoading, signInAnonymously } = useAuth()
-  const { data: session, isLoading: sessionLoading, error: sessionError } = useSession(sessionId!)
+  const { data: session, isLoading: sessionLoading } = useSession(sessionId!)
   const { canEdit, isHost, isLoading: roleLoading } = useSessionRole(sessionId!)
   const { data: participants = [] } = useParticipants(sessionId!)
   const joinSession = useJoinSession()
@@ -83,7 +83,7 @@ export default function SessionPage() {
     }
   }, [user, sessionId])
 
-  if (authLoading || sessionLoading || roleLoading) {
+  if (authLoading || sessionLoading || roleLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-bg">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
@@ -91,7 +91,7 @@ export default function SessionPage() {
     )
   }
 
-  if (sessionError || !session) {
+  if (!session) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-bg">
         <p className="text-text-muted">Session introuvable ou inactive.</p>
@@ -104,8 +104,6 @@ export default function SessionPage() {
       </div>
     )
   }
-
-  if (!user) return null
 
   // Show name modal if user hasn't joined yet
   if (!hasJoined) {
