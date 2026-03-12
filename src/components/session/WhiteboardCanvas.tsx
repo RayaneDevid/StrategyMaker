@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import { Tldraw, type Editor, type TLAssetId } from 'tldraw'
-import 'tldraw/tldraw.css'
 import { useTldrawSync } from '@/hooks/useTldrawSync'
 import type { CursorMap } from '@/lib/sync-provider'
 import type { Json } from '@/types/database'
