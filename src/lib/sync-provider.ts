@@ -163,6 +163,11 @@ export class SyncProvider {
     }
   }
 
+  updateUserInfo(displayName: string, userColor: string) {
+    this.displayName = displayName
+    this.userColor = userColor
+  }
+
   async disconnect() {
     if (this.isHost) {
       await this.saveSnapshot()

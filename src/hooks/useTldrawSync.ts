@@ -50,8 +50,13 @@ export function useTldrawSync({
         container.removeEventListener('pointermove', handlePointerMove)
       }
     },
-    [sessionId, userId, displayName, userColor, canEdit, isHost],
+    [sessionId, userId],
   )
+
+  // Update user info (displayName, userColor) when they change
+  useEffect(() => {
+    providerRef.current?.updateUserInfo(displayName, userColor)
+  }, [displayName, userColor])
 
   // Update permissions when they change
   useEffect(() => {

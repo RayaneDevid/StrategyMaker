@@ -57,7 +57,7 @@ export default function WhiteboardCanvas({
       // Connect sync
       handleMount(editor)
     },
-    [snapshot, imageUrl, canEdit, handleMount],
+    [imageUrl, handleMount],
   )
 
   return (
