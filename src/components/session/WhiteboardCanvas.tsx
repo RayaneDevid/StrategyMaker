@@ -61,7 +61,7 @@ export default function WhiteboardCanvas({
 
   return (
     <div className="absolute inset-0">
-      <Tldraw onMount={onMount} />
+      <Tldraw licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY} onMount={onMount} />
       <CursorsOverlay cursors={cursors} />
     </div>
   )
