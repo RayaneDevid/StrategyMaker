@@ -22,11 +22,11 @@ export default function ParticipantsPanel({
       {/* Toggle button */}
       <button
         onClick={toggleSidebar}
-        className="absolute right-2 top-14 z-[501] rounded-lg border border-border bg-surface p-1.5 transition-colors hover:border-accent"
+        className="absolute left-2 top-14 z-[501] rounded-lg border border-border bg-surface p-1.5 transition-colors hover:border-accent"
         aria-label={sidebarOpen ? 'Fermer le panneau' : 'Ouvrir le panneau'}
       >
         <svg
-          className={`h-4 w-4 transition-transform ${sidebarOpen ? 'rotate-0' : 'rotate-180'}`}
+          className={`h-4 w-4 transition-transform ${sidebarOpen ? 'rotate-180' : 'rotate-0'}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -38,8 +38,8 @@ export default function ParticipantsPanel({
 
       {/* Panel */}
       <div
-        className={`absolute right-0 top-12 z-[500] h-[calc(100%-3rem)] w-64 border-l border-border bg-surface transition-transform ${
-          sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`absolute left-0 top-12 z-[500] h-[calc(100%-3rem)] w-64 border-r border-border bg-surface transition-transform ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="p-3">

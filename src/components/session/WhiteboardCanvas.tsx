@@ -61,7 +61,7 @@ export default function WhiteboardCanvas({
   )
 
   return (
-    <div className="relative h-full w-full">
+    <div className="absolute inset-0">
       <Tldraw onMount={onMount} />
       <CursorsOverlay cursors={cursors} />
     </div>

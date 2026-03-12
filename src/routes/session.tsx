@@ -129,7 +129,7 @@ export default function SessionPage() {
         participantCount={participants.filter((p) => p.is_online).length}
       />
 
-      <div className="relative flex-1">
+      <div className="relative flex-1 overflow-hidden">
         <WhiteboardCanvas
           sessionId={session.id}
           userId={user.id}

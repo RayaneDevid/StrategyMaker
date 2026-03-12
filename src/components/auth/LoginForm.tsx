@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 
 export default function LoginForm() {
-  const { signInWithEmail, signUpWithEmail, signInWithDiscord } = useAuth()
+  const { signInWithEmail, signUpWithEmail } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
