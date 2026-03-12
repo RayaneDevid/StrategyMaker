@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Tldraw, type Editor, type TLAssetId } from 'tldraw'
 import { useTldrawSync } from '@/hooks/useTldrawSync'
 import type { CursorMap } from '@/lib/sync-provider'
@@ -27,7 +27,7 @@ export default function WhiteboardCanvas({
   imageUrl,
   snapshot,
 }: WhiteboardCanvasProps) {
-  const { handleMount, cursors } = useTldrawSync({
+  const { handleMount, cursors, editor: editorRef } = useTldrawSync({
     sessionId,
     userId,
     displayName,
@@ -62,7 +62,7 @@ export default function WhiteboardCanvas({
   return (
     <div className="absolute inset-0">
       <Tldraw licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY} onMount={onMount} />
-      <CursorsOverlay cursors={cursors} />
+      <CursorsOverlay cursors={cursors} editorRef={editorRef} />
     </div>
   )
 }
@@ -120,34 +120,61 @@ async function loadBackgroundImage(editor: Editor, imageUrl: string) {
   editor.zoomToFit({ animation: { duration: 0 } })
 }
 
-function CursorsOverlay({ cursors }: { cursors: CursorMap }) {
+function CursorsOverlay({
+  cursors,
+  editorRef,
+}: {
+  cursors: CursorMap
+  editorRef: React.RefObject<Editor | null>
+}) {
+  // Re-render on camera changes so cursor positions stay accurate
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+    const unlisten = editor.store.listen(
+      () => setTick((t) => t + 1),
+      { source: 'all', scope: 'session' },
+    )
+    return unlisten
+  }, [editorRef])
+
   if (cursors.size === 0) return null
+
+  const editor = editorRef.current
 
   return (
     <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
-      {Array.from(cursors.values()).map((cursor) => (
-        <div
-          key={cursor.userId}
-          className="absolute transition-transform duration-75"
-          style={{
-            transform: `translate(${cursor.point.x}px, ${cursor.point.y}px)`,
-          }}
-        >
-          <svg
-            className="h-4 w-4"
-            viewBox="0 0 16 16"
-            fill={cursor.color}
+      {Array.from(cursors.values()).map((cursor) => {
+        // Convert page coordinates to viewport (screen) coordinates
+        const screenPoint = editor
+          ? editor.pageToViewport(cursor.point)
+          : cursor.point
+
+        return (
+          <div
+            key={cursor.userId}
+            className="absolute transition-transform duration-75"
+            style={{
+              transform: `translate(${screenPoint.x}px, ${screenPoint.y}px)`,
+            }}
           >
-            <path d="M0 0l16 6-6.5 2.5L7 16z" />
-          </svg>
-          <span
-            className="ml-2 whitespace-nowrap rounded px-1 py-0.5 text-xs text-white"
-            style={{ backgroundColor: cursor.color }}
-          >
-            {cursor.name}
-          </span>
-        </div>
-      ))}
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 16 16"
+              fill={cursor.color}
+            >
+              <path d="M0 0l16 6-6.5 2.5L7 16z" />
+            </svg>
+            <span
+              className="ml-2 whitespace-nowrap rounded px-1 py-0.5 text-xs text-white"
+              style={{ backgroundColor: cursor.color }}
+            >
+              {cursor.name}
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }

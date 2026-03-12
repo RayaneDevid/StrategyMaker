@@ -80,6 +80,7 @@ export function useTldrawSync({
   return {
     handleMount,
     cursors,
+    editor: editorRef,
     provider: providerRef,
   }
 }
