@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Tldraw, type Editor, type TLAssetId } from 'tldraw'
+import type { TLAssetStore } from '@tldraw/tlschema'
+import { supabase } from '@/lib/supabase'
 import { useTldrawSync } from '@/hooks/useTldrawSync'
 import type { CursorMap } from '@/lib/sync-provider'
 import type { Json } from '@/types/database'
@@ -36,6 +38,26 @@ export default function WhiteboardCanvas({
     isHost,
   })
 
+  const assetStore = useMemo<TLAssetStore>(() => ({
+    async upload(asset, file) {
+      const fileExt = file.name.split('.').pop() ?? 'png'
+      const filePath = `${sessionId}/${asset.id}.${fileExt}`
+      const { error: uploadError } = await supabase.storage
+        .from('session-images')
+        .upload(filePath, file, { upsert: true })
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('session-images')
+        .getPublicUrl(filePath)
+
+      return { src: publicUrl }
+    },
+    resolve(asset) {
+      return asset.props.src
+    },
+  }), [sessionId])
+
   const onMount = useCallback(
     (editor: Editor) => {
       // Load snapshot if it exists
@@ -61,14 +83,14 @@ export default function WhiteboardCanvas({
 
   return (
     <div className="absolute inset-0">
-      <Tldraw licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY} onMount={onMount} />
+      <Tldraw licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY} assets={assetStore} onMount={onMount} />
       <CursorsOverlay cursors={cursors} editorRef={editorRef} />
     </div>
   )
 }
 
 async function loadBackgroundImage(editor: Editor, imageUrl: string) {
-  // Check if background already exists (from snapshot)
+  // Check if background already exists (from snapshot or remote sync)
   const existingShapes = editor.getCurrentPageShapes()
   const bgExists = existingShapes.some(
     (s) => s.type === 'image' && s.isLocked,
@@ -87,33 +109,37 @@ async function loadBackgroundImage(editor: Editor, imageUrl: string) {
 
   const assetId = `asset:bg-${crypto.randomUUID()}` as TLAssetId
 
-  editor.createAssets([
-    {
-      id: assetId,
+  // Temporarily pause the store listener so the background creation
+  // is NOT broadcast — each user creates it independently from the URL
+  editor.store.mergeRemoteChanges(() => {
+    editor.createAssets([
+      {
+        id: assetId,
+        type: 'image',
+        typeName: 'asset',
+        props: {
+          name: 'background',
+          src: imageUrl,
+          w: img.naturalWidth,
+          h: img.naturalHeight,
+          mimeType: 'image/png',
+          isAnimated: false,
+        },
+        meta: {},
+      },
+    ])
+
+    editor.createShape({
       type: 'image',
-      typeName: 'asset',
+      x: 0,
+      y: 0,
+      isLocked: true,
       props: {
-        name: 'background',
-        src: imageUrl,
+        assetId,
         w: img.naturalWidth,
         h: img.naturalHeight,
-        mimeType: 'image/png',
-        isAnimated: false,
       },
-      meta: {},
-    },
-  ])
-
-  editor.createShape({
-    type: 'image',
-    x: 0,
-    y: 0,
-    isLocked: true,
-    props: {
-      assetId,
-      w: img.naturalWidth,
-      h: img.naturalHeight,
-    },
+    })
   })
 
   // Center the camera on the image
